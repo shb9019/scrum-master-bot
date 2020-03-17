@@ -34,5 +34,6 @@ Click on the options on any message, you should find all message actions
 - [ ] Keep track of how many and which scrums a member is not present for
 - [ ] Allow members to cite reasons before scrum for not being present
 - [ ] Create custom topic discussions e.g., DWOC, Hackertalks to be included in MoM
+- [ ] Cleaner code and add deploy hooks
 - [ ] Measure interactivity of a person based on the group conversations (Future plan)
 - [ ] Implement some sort of NLP to create Minutes from the conversation itself (Future plan)
