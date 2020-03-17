@@ -25,3 +25,14 @@ Contact any of the admins to add the app to a channel
 Click on the options on any message, you should find all message actions
 
 `Add to LWID` - Add this message to the person's "Last Week I Did"
+
+## TODO
+
+- [ ] Getting Weekly MoM
+- [ ] Get personal MoM i.e., /my-mom returns all things I've done over past weeks
+- [ ] Somehow distinguish passed outs
+- [ ] Keep track of how many and which scrums a member is not present for
+- [ ] Allow members to cite reasons before scrum for not being present
+- [ ] Create custom topic discussions e.g., DWOC, Hackertalks to be included in MoM
+- [ ] Measure interactivity of a person based on the group conversations (Future plan)
+- [ ] Implement some sort of NLP to create Minutes from the conversation itself (Future plan)
