@@ -30,7 +30,7 @@ Click on the options on any message, you should find all message actions
 
 - [ ] Getting Weekly MoM
 - [ ] Get personal MoM i.e., /my-mom returns all things I've done over past weeks
-- [ ] Somehow distinguish passed outs
+- [ ] Somehow distinguish passed outs - Currently attendance counts all members in the org
 - [ ] Keep track of how many and which scrums a member is not present for
 - [ ] Allow members to cite reasons before scrum for not being present
 - [ ] Create custom topic discussions e.g., DWOC, Hackertalks to be included in MoM
