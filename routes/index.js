@@ -4,8 +4,10 @@ const lwid = require('../db/models').lwid;
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const request = require("request-promise");
+const config = require("../config/config");
 
 // Last week I did
+// App Action - Adds a message to LWID
 router.post('/lwid', async (req, res) => {
     try {
         let {payload} = req.body;
@@ -49,7 +51,7 @@ router.post('/lwid', async (req, res) => {
         const profilePayload = await request(`https://slack.com/api/users.profile.get?user=${payload.message.user}`, {
             method: 'GET',
             headers: {
-                "Authorization": `Bearer xoxb-10288252704-1003424213152-SPWkz3QQbGQOZ2UrgHLdxGO1`,
+                "Authorization": `Bearer ${config.authToken}`,
                 "Content-Type": "application/x-www-form-urlencoded"
             }
         });
@@ -93,6 +95,7 @@ router.post('/lwid', async (req, res) => {
     }
 });
 
+// Slash Command - Fetch Minutes of the meeting (Collection of LWIDs)
 router.post('/mom', async (req, res) => {
     try {
         const {response_url} = req.body;
@@ -132,6 +135,7 @@ router.post('/mom', async (req, res) => {
     }
 });
 
+// Slash Command - Fetch LWIDs of users
 router.post('/get-lwids-topic', async (req, res) => {
     try {
         let {text, response_url} = req.body;
@@ -160,6 +164,67 @@ router.post('/get-lwids-topic', async (req, res) => {
         request.post(response_url, {
             json: {
                 text: lwid_text,
+                replace_original: false
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            type: 'Error',
+            error: err.toString(),
+        });
+    }
+});
+
+router.post('/attendance', async (req, res) => {
+    try {
+        const {response_url} = req.body;
+
+        res.status(200).json("Fetching all users and calculating attendance... (Might take a minute or two)");
+
+        const usersPayload = await request(`https://slack.com/api/users.list`, {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${config.authToken}`,
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+        });
+
+        let members = JSON.parse(usersPayload).members;
+        members = members.filter((user) => !(user.deleted || user.is_bot || user.real_name === "Slackbot" || user.real_name === "deltaforce"));
+
+        let attendance_text = "*People not active*:\n";
+        let total_count = members.length;
+        let active_count = 0;
+
+        for (let index in members) {
+            const presencePayload = await request(`https://slack.com/api/users.getPresence?user=${members[index].id}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${config.authToken}`,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            });
+
+            const presence = JSON.parse(presencePayload);
+
+            if (presence.presence !== "active") {
+                attendance_text += `- ${members[index].real_name}\n`;
+            } else {
+                active_count++;
+            }
+
+            console.log(index);
+        }
+
+        attendance_text += "\n";
+        attendance_text += `*Total Members*: ${total_count}\n`;
+        attendance_text += `*Present Members*: ${active_count}`;
+
+        request.post(response_url, {
+            json: {
+                text: attendance_text,
+                response_type: "in_channel",
                 replace_original: false
             }
         });

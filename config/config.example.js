@@ -4,21 +4,22 @@ const config = {
             port: 'Your port number',
             sessionSecret: 'SESSION_SECRET',
         },
-        appBaseURL: 'app base url',
+        authToken: 'auth token',
+
     },
     production: {
         app: {
             port: 'Your port number',
             sessionSecret: 'SESSION_SECRET',
         },
-        appBaseURL: 'app base url',
+        authToken: 'auth token',
     },
     test: {
         app: {
             port: 'Your port number',
             sessionSecret: 'SESSION_SECRET',
         },
-        appBaseURL: 'app base url',
+        authToken: 'auth token',
     },
 };
 const env = process.env.NODE_ENV || 'development';
