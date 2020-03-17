@@ -176,6 +176,7 @@ router.post('/get-lwids-topic', async (req, res) => {
     }
 });
 
+// Get list of all people not present and count
 router.post('/attendance', async (req, res) => {
     try {
         const {response_url} = req.body;

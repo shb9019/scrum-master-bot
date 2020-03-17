@@ -18,6 +18,8 @@ Contact any of the admins to add the app to a channel
 
 `/lwid-topic-search` - Search for a specific regex in all people's `Last Week I did`
 
+`/attendance` - List of all people not present and the attendance count
+
 ### App Actions
 
 Click on the options on any message, you should find all message actions
