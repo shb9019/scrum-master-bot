@@ -5,6 +5,16 @@
 ```
     git clone https://github.com/shb9019/scrum-master-bot.git
     npm install
+```
+
+## Run Migrations
+```
+    cd db
+    sequelize db:migrate
+```
+
+## Start application
+```
     npm start
 ```
 
