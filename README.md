@@ -18,7 +18,8 @@ Contact any of the admins to add the app to a channel
 
 `/lwid-topic-search` - Search for a specific regex in all people's `Last Week I did`
 
-`/attendance` - List of all people not present and the attendance count
+`/attendance` - List of all people not present and the attendance count. Use this one sparingly,
+this request takes around 2 mins.
 
 ### App Actions
 
