@@ -10,12 +10,15 @@ COPY package.json .
 # Installing all dependencies
 RUN npm install
 
-# Copying all files
-COPY . .
-
 # Exposing the port 8080
 EXPOSE 8080
 
 # Defining how to run this project
 CMD ["npm", "start"]
 
+# Copying all files
+COPY . .
+
+# Running all migrations
+RUN chmod +x run_migrations.sh
+RUN ./run_migrations.sh 
