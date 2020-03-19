@@ -123,9 +123,28 @@ router.post('/mom', async (req, res) => {
 
         let lwid_text = "";
 
+        let lwid_contents = [];
         lwids.forEach((lwid) => {
-            lwid_text += `- ${lwid.name} - ${lwid.content}\n`;
+            let exists = false;
+            for (let i in lwid_contents) {
+                if (lwid_contents[i].name === lwid.name) {
+                    lwid_contents[i].content += `, ${lwid.content}`;
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                lwid_contents.push({
+                    name: lwid.name,
+                    content: lwid.content
+                });
+            }
         });
+
+        for (let i in lwid_contents) {
+            lwid_text += `- ${lwid_contents[i].name} - ${lwid_contents[i].content}\n`;
+        }
 
         // Leave content empty if no LWIDs
         if (lwid_text !== "") {
