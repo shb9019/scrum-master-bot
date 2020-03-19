@@ -1,0 +1,25 @@
+version: '3.0'
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'scrum_master'
+      MYSQL_ROOT_PASSWORD: 'password'
+    container_name: scrum_bot_db
+
+  web:
+    build: .
+    ports:
+    - "8080:3000"
+    links:
+    - db
+    container_name: scrum_bot_web
+
+  migration:
+    build:
+      context : "."
+    depends_on:
+      - db
+    command: ["./wait-for-it/wait-for-it.sh", "mysql:3306", "--timeout=120", "--", "npm", "run", "migrate"]
+    container_name: scrum_bot_migration
