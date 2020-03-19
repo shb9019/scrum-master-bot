@@ -13,6 +13,9 @@ RUN npm install
 # Exposing the port 8080
 EXPOSE 8080
 
+# Changing the environment
+ENV NODE_ENV=production
+
 # Defining how to run this project
 CMD ["npm", "start"]
 
