@@ -1,17 +1,17 @@
 {
   "development": {
     "username": "root",
-    "password": "root",
-    "database": "scrum-master",
-    "host": "127.0.0.1",
+    "password": "password",
+    "database": "scrum_master",
+    "host": "db",
     "dialect": "mysql",
     "operatorsAliases": false
   },
   "test": {
     "username": "root",
-    "password": null,
+    "password": "password",
     "database": "database_test",
-    "host": "127.0.0.1",
+    "host": "db",
     "dialect": "mysql",
     "operatorsAliases": false
   },
@@ -19,7 +19,7 @@
     "username": "root",
     "password": null,
     "database": "database_production",
-    "host": "127.0.0.1",
+    "host": "db",
     "dialect": "mysql",
     "operatorsAliases": false
   }

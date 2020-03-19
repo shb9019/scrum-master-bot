@@ -238,4 +238,30 @@ router.post('/attendance', async (req, res) => {
     }
 });
 
+router.get('/test', (req, res, next) => {
+    return res.status(200).json({
+        message : "Working properly",
+        code : 200
+    })
+})
+
+router.get('/test_db', async(req, res, next) => {
+    try{
+        await lwid.create({
+            name: "Hrishi",
+            content: "Badass",
+            date: new Date(),
+            message_ts: "Badass"
+        });
+    }catch(err){
+        return res.status(500).json({
+            message : err.message, 
+            type : err.name,
+            err : err
+        })
+    }
+
+    return res.sendStatus(200);
+})
+
 module.exports = router;
