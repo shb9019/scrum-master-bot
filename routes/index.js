@@ -92,15 +92,15 @@ router.post('/lwid', async (req, res) => {
             });
         } else if (callback_id === 'discussion') {
             // Marking as discussion can only be done by scrum master
-            // if (!(await isAdmin(payload.user.id))) {
-            //     request.post(payload.response_url, {
-            //         json: {
-            //             text: `Only scrum masters can mark as discussion! Sibi is the god!`,
-            //             replace_original: false
-            //         }
-            //     });
-            //     return;
-            // }
+            if (!(await isAdmin(payload.user.id))) {
+                request.post(payload.response_url, {
+                    json: {
+                        text: `Only scrum masters can mark as discussion! Sibi is the god!`,
+                        replace_original: false
+                    }
+                });
+                return;
+            }
 
             // Search if there is already an entry with same timestamp
             const [discussions, err] = await discussion.findAll({
