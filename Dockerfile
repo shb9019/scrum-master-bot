@@ -19,6 +19,5 @@ CMD ["npm", "start"]
 # Copying all files
 COPY . .
 
-# Running all migrations
-RUN chmod +x run_migrations.sh
-RUN ./run_migrations.sh 
+# Making the wait for it script as an executable 
+RUN chmod +x ./wait-for-it/wait-for-it.sh
