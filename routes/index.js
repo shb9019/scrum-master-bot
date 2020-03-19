@@ -28,25 +28,13 @@ router.post('/lwid', async (req, res) => {
         // Search if there is already an entry with same timestamp
         const [lwids, err] = await lwid.findAll({
             where: {
-                message_ts: payload.message_ts
+                message_ts: payload.message_ts,
+                channel_id: payload.channel.id
             }
         });
 
         if (lwids) {
-            res.sendStatus(200);
-            request.post(payload.response_url,
-                {
-                    json: {
-                        text: `Already marked as LWID!`,
-                        replace_original: false
-                    }
-                },
-                function (error, response, body) {
-                    if (!error && response.statusCode === 200) {
-                        console.log(body);
-                    }
-                }
-            );
+            res.status(200).json("Already marked as LWID!");
             return;
         }
 
@@ -85,7 +73,8 @@ router.post('/lwid', async (req, res) => {
             name: profile.real_name,
             content: payload.message.text,
             date: new Date(),
-            message_ts: payload.message_ts
+            message_ts: payload.message_ts,
+            channel_id: payload.channel.id
         });
 
         res.sendStatus(200);
@@ -110,9 +99,9 @@ router.post('/lwid', async (req, res) => {
 // Slash Command - Fetch Minutes of the meeting (Collection of LWIDs)
 router.post('/mom', async (req, res) => {
     try {
-        const {response_url, text} = req.body;
+        const {response_url, text, channel_id} = req.body;
 
-        res.status(200).json("Fetching MoM...");
+        res.status(200).json("Fetching Minutes...");
 
         let TODAY_START, NOW;
         if (text === "") {
@@ -128,14 +117,20 @@ router.post('/mom', async (req, res) => {
                 date: {
                     [Op.between]: [TODAY_START, NOW]
                 },
+                channel_id
             }
         });
 
-        let lwid_text = "\n\n*Last Week I did*\n";
+        let lwid_text = "";
 
         lwids.forEach((lwid) => {
             lwid_text += `- ${lwid.name} - ${lwid.content}\n`;
         });
+
+        // Leave content empty if no LWIDs
+        if (lwid_text !== "") {
+            lwid_text = "\n\n*Last Week I did*\n" + lwid_text;
+        }
 
         request.post(response_url, {
             json: {
