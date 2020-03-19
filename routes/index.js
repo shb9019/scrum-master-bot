@@ -336,10 +336,10 @@ router.post("/get-attendance", async (req, res) => {
         let {channel_id, text, user_id, response_url} = req.body;
 
         // Only for admins
-        // if (!(await isAdmin(user_id))) {
-        //     res.status(200).json("You are not a scrum master! Ask Sibi for attendance.");
-        //     return;
-        // }
+        if (!(await isAdmin(user_id))) {
+            res.status(200).json("You are not a scrum master! Ask Sibi for attendance.");
+            return;
+        }
 
         res.status(200).json("Fetching...");
 
@@ -402,5 +402,62 @@ router.post("/get-attendance", async (req, res) => {
     }
 
 });
+
+router.post("/my-attendance", async (req, res) => {
+    try {
+        let {channel_id, user_id, response_url} = req.body;
+
+        res.status(200).json("Fetching...");
+
+        // Getting the name of the requested person
+        const profilePayload = await request(`https://slack.com/api/users.profile.get?user=${user_id}`, {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${config.authToken}`,
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+        });
+
+        const {ok, profile} = JSON.parse(profilePayload);
+
+        // Get LWIDs of person and calculate as present only if there is a LWID present on a day
+        const lwids = await lwid.findAll({
+            where: {
+                name: profile.real_name,
+                channel_id
+            }
+        });
+
+        // Only have unique dates
+        const present_dates = [];
+        let attendance_text = `*Scrums ${profile.real_name} was present for:*\n`;
+        lwids.forEach((lwid) => {
+            const date = new Date(lwid.date).toDateString();
+
+            if (present_dates.indexOf(date) === -1) {
+                present_dates.push(date);
+            }
+        });
+
+        for (let i in present_dates) {
+            attendance_text += " - " + present_dates[i] + "\n";
+        }
+
+        request.post(response_url, {
+            json: {
+                text: attendance_text,
+                replace_original: false
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            type: 'Error',
+            error: err.toString(),
+        });
+    }
+
+});
+
 
 module.exports = router;
