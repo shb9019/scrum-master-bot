@@ -277,4 +277,58 @@ router.post('/attendance', async (req, res) => {
     }
 });
 
+// Slash Command - Fetch personal contributions
+router.post('/my-mom', async (req, res) => {
+    try {
+        let {channel_id, response_url, user_name, user_id} = req.body;
+
+        const profilePayload = await request(`https://slack.com/api/users.profile.get?user=${user_id}`, {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${config.authToken}`,
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+        });
+
+        const {ok, profile} = JSON.parse(profilePayload);
+
+        if (!ok) {
+            request.post(response_url, {
+                json: {
+                    text: `User does not exist`,
+                    replace_original: false
+                }
+            });
+            return;
+        }
+
+        res.status(200).json("Searching...");
+
+        const lwids = await lwid.findAll({
+            where: {
+                name: profile.real_name,
+                channel_id
+            }
+        });
+
+        let lwid_text = "";
+        for (let i in lwids) {
+            lwid_text += `- ${new Date(lwids[i].date).toDateString()} - ${lwids[i].content}\n`;
+        }
+
+        request.post(response_url, {
+            json: {
+                text: lwid_text,
+                replace_original: false
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            type: 'Error',
+            error: err.toString(),
+        });
+    }
+});
+
 module.exports = router;
