@@ -108,8 +108,9 @@ router.post('/mom', async (req, res) => {
             TODAY_START = new Date(new Date().setHours(0, 0, 0, 0));
             NOW = new Date();
         } else {
-            TODAY_START = new Date(new Date(text).setHours(0, 0, 0, 0));
-            NOW = new Date(new Date(text).setHours(23, 59, 59, 0));
+            const [startDate, endDate] = text.split(" ");
+            TODAY_START = new Date(new Date(startDate).setHours(0, 0, 0, 0));
+            NOW = new Date(new Date(endDate).setHours(23, 59, 59, 0));
         }
 
         const lwids = await lwid.findAll({
@@ -123,6 +124,7 @@ router.post('/mom', async (req, res) => {
 
         let lwid_text = "";
 
+        // Loop for grouping MoMs from same person
         let lwid_contents = [];
         lwids.forEach((lwid) => {
             let exists = false;
