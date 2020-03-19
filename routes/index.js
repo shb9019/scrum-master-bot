@@ -1,10 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const lwid = require('../db/models').lwid;
+const admin = require('../db/models').admin;
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const request = require("request-promise");
 const config = require("../config/config");
+
+// Check if a userId is admin
+const isAdmin = async (userId) => {
+    const [admins, err] = await admin.findAll({
+        where: {
+            userId
+        }
+    });
+
+    return (!!admins);
+};
 
 // Last week I did
 // App Action - Adds a message to LWID
@@ -98,12 +110,18 @@ router.post('/lwid', async (req, res) => {
 // Slash Command - Fetch Minutes of the meeting (Collection of LWIDs)
 router.post('/mom', async (req, res) => {
     try {
-        const {response_url} = req.body;
+        const {response_url, text} = req.body;
 
         res.status(200).json("Fetching MoM...");
 
-        const TODAY_START = new Date(new Date().setHours(0, 0, 0, 0));
-        const NOW = new Date();
+        let TODAY_START, NOW;
+        if (text === "") {
+            TODAY_START = new Date(new Date().setHours(0, 0, 0, 0));
+            NOW = new Date();
+        } else {
+            TODAY_START = new Date(new Date(text).setHours(0, 0, 0, 0));
+            NOW = new Date(new Date(text).setHours(23, 59, 59, 0));
+        }
 
         const lwids = await lwid.findAll({
             where: {
@@ -179,7 +197,12 @@ router.post('/get-lwids-topic', async (req, res) => {
 // Get list of all people not present and count
 router.post('/attendance', async (req, res) => {
     try {
-        const {response_url} = req.body;
+        const {response_url, user_id} = req.body;
+
+        if (!(await isAdmin(user_id))) {
+            res.status(200).json("You are not a scrum master! Ask Sibi for attendance.");
+            return;
+        }
 
         res.status(200).json("Fetching all users and calculating attendance... (Might take a minute or two)");
 
