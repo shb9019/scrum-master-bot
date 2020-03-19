@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const lwid = require('../db/models').lwid;
 const admin = require('../db/models').admin;
+const discussion = require('../db/models').discussion;
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const request = require("request-promise");
@@ -24,69 +25,121 @@ router.post('/lwid', async (req, res) => {
     try {
         let {payload} = req.body;
         payload = JSON.parse(payload);
+        const {callback_id} = payload;
 
-        // Search if there is already an entry with same timestamp
-        const [lwids, err] = await lwid.findAll({
-            where: {
+        if (callback_id === 'lwid') {
+            // Search if there is already an entry with same timestamp
+            const [lwids, err] = await lwid.findAll({
+                where: {
+                    message_ts: payload.message_ts,
+                    channel_id: payload.channel.id
+                }
+            });
+
+            if (lwids) {
+                res.status(200).json("Already marked as LWID!");
+                return;
+            }
+
+            if (!payload.message.user) {
+                request.post(payload.response_url, {
+                    json: {
+                        text: `User cannot be a bot`,
+                        replace_original: false
+                    }
+                });
+                return;
+            }
+
+            const profilePayload = await request(`https://slack.com/api/users.profile.get?user=${payload.message.user}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${config.authToken}`,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            });
+
+            const {ok, profile} = JSON.parse(profilePayload);
+
+            if (!ok) {
+                request.post(payload.response_url, {
+                    json: {
+                        text: `User does not exist`,
+                        replace_original: false
+                    }
+                });
+                return;
+            }
+
+            // Insert lwid to db
+            await lwid.create({
+                name: profile.real_name,
+                content: payload.message.text,
+                date: new Date(),
                 message_ts: payload.message_ts,
                 channel_id: payload.channel.id
-            }
-        });
+            });
 
-        if (lwids) {
-            res.status(200).json("Already marked as LWID!");
-            return;
-        }
+            res.sendStatus(200);
 
-        if (!payload.message.user) {
+            // Send app response
             request.post(payload.response_url, {
                 json: {
-                    text: `User cannot be a bot`,
+                    text: `Great work ${payload.user.name}!`,
+                    response_type: "in_channel",
                     replace_original: false
                 }
             });
-            return;
-        }
+        } else if (callback_id === 'discussion') {
+            // Marking as discussion can only be done by scrum master
+            // if (!(await isAdmin(payload.user.id))) {
+            //     request.post(payload.response_url, {
+            //         json: {
+            //             text: `Only scrum masters can mark as discussion! Sibi is the god!`,
+            //             replace_original: false
+            //         }
+            //     });
+            //     return;
+            // }
 
-        const profilePayload = await request(`https://slack.com/api/users.profile.get?user=${payload.message.user}`, {
-            method: 'GET',
-            headers: {
-                "Authorization": `Bearer ${config.authToken}`,
-                "Content-Type": "application/x-www-form-urlencoded"
+            // Search if there is already an entry with same timestamp
+            const [discussions, err] = await discussion.findAll({
+                where: {
+                    message_ts: payload.message_ts,
+                    channel_id: payload.channel.id
+                }
+            });
+
+            if (discussions) {
+                res.sendStatus(200);
+                request.post(payload.response_url, {
+                    json: {
+                        text: `Already marked as Discussion`,
+                        replace_original: false
+                    }
+                });
+                return;
             }
-        });
 
-        const {ok, profile} = JSON.parse(profilePayload);
+            const [topic, content] = payload.message.text.split(/-(.+)/);
 
-        if (!ok) {
+            // Insert discussion to db
+            await discussion.create({
+                topic,
+                content,
+                date: new Date(),
+                message_ts: payload.message.ts,
+                channel_id: payload.channel.id
+            });
+
+            res.sendStatus(200);
             request.post(payload.response_url, {
                 json: {
-                    text: `User does not exist`,
+                    text: `Added!`,
                     replace_original: false
                 }
             });
-            return;
         }
-
-        // Insert lwid to db
-        await lwid.create({
-            name: profile.real_name,
-            content: payload.message.text,
-            date: new Date(),
-            message_ts: payload.message_ts,
-            channel_id: payload.channel.id
-        });
-
-        res.sendStatus(200);
-
-        // Send app response
-        request.post(payload.response_url, {
-            json: {
-                text: `Great work ${payload.user.name}!`,
-                response_type: "in_channel",
-                replace_original: false
-            }
-        });
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -153,9 +206,47 @@ router.post('/mom', async (req, res) => {
             lwid_text = "\n\n*Last Week I did*\n" + lwid_text;
         }
 
+        const discussions = await discussion.findAll({
+            where: {
+                date: {
+                    [Op.between]: [TODAY_START, NOW]
+                },
+                channel_id
+            }
+        });
+
+        let discussion_text = "";
+
+        // Loop for grouping MoMs from same person
+        let discussion_contents = [];
+        discussions.forEach((discussion) => {
+            let exists = false;
+            for (let i in discussion_contents) {
+                if (discussion_contents[i].topic === discussion.topic) {
+                    discussion_contents[i].content.push(`- ${discussion.content}\n`);
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                discussion_contents.push({
+                    topic: discussion.topic,
+                    content: [`- ${discussion.content}\n`]
+                });
+            }
+        });
+
+        for (let i in discussion_contents) {
+            discussion_text += `\n*${discussion_contents[i].topic}*\n`;
+            for (let j in discussion_contents[i].content) {
+                discussion_text += discussion_contents[i].content[j];
+            }
+        }
+
         request.post(response_url, {
             json: {
-                text: `*MINUTES OF THE MEETING* \n${lwid_text}`,
+                text: `*MINUTES OF THE MEETING* \n${lwid_text} \n${discussion_text}`,
                 response_type: "in_channel",
                 replace_original: false
             }
@@ -458,6 +549,5 @@ router.post("/my-attendance", async (req, res) => {
     }
 
 });
-
 
 module.exports = router;
