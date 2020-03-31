@@ -17,7 +17,7 @@
   },
   "production": {
     "username": "root",
-    "password": null,
+    "password": "password",
     "database": "scrum-master",
     "host": "db",
     "dialect": "mysql",
