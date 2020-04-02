@@ -1,7 +1,7 @@
 {
   "development": {
     "username": "root",
-    "password": "root",
+    "password": "password",
     "database": "scrum-master",
     "host": "127.0.0.1",
     "dialect": "mysql",
@@ -17,9 +17,9 @@
   },
   "production": {
     "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "password": "password",
+    "database": "scrum-master",
+    "host": "db",
     "dialect": "mysql",
     "operatorsAliases": false
   }
